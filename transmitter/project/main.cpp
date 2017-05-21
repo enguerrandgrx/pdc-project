@@ -7,12 +7,26 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <iostream>
+#include <bitset>
+
+#include <map>
+
+
+//#include <vector>;
+#include <string>
+using namespace std;
+
+//vector<char>;
 
 // vertex position of the triangle
 const GLfloat triangle_vertex_positions[] = {-1.0f, -1.0f, 0.0f, 
                                             1.0f, -1.0f, 0.0f, 
                                             -1.0f,  1.0f, 0.0f, 
                                             1.0f, 1.0f, 0.0f};
+
+map<string, string> tab_bin_to_ter;
+
 
 
 GLuint loc_time;
@@ -29,11 +43,16 @@ GLuint loc_c6;
 GLuint loc_c7;
 GLuint loc_c8;
 
-int starting_time = 10;
+int starting_time = 10000;
 
 int starting;
 
+// Annonce fonction
 void rempl_c(int[]);
+string conv_string_to_bin_string(string s);
+string bin_to_ter(string s);
+
+
 
 void Init() {
     // sets background color
@@ -86,6 +105,15 @@ void Init() {
     loc_c6 = glGetUniformLocation(program_id, "c6");
     loc_c7 = glGetUniformLocation(program_id, "c7");
     loc_c8 = glGetUniformLocation(program_id, "c8");
+
+    tab_bin_to_ter["000"] = "00";
+    tab_bin_to_ter["001"] = "01";
+    tab_bin_to_ter["010"] = "02";
+    tab_bin_to_ter["011"] = "10";
+    tab_bin_to_ter["100"] = "11";
+    tab_bin_to_ter["101"] = "12";
+    tab_bin_to_ter["110"] = "20";
+    tab_bin_to_ter["111"] = "21";
 
 }
 
@@ -146,7 +174,70 @@ void rempl_c(int tab[]) {
     return;
 }
 
+// 
+void conv_ascii_to_RGB(string s) {
+
+
+    string str_bin = "";
+    for (int i = 0; i < s.size(); i++) {
+        string sub = s.substr(i, 1);
+        string sub_bin = conv_string_to_bin_string(sub);
+
+        str_bin = str_bin + sub_bin;
+
+
+    }
+
+    int str_bin_size;
+    if (str_bin.size()%3 == 0) {
+        str_bin_size = str_bin.size()/3;
+    } else if (str_bin.size()%3 == 1) {
+        str_bin_size = (str_bin.size()/3)+1;
+        str_bin = str_bin + "00";
+    } else if (str_bin.size()%3 == 2) {
+        str_bin_size = (str_bin.size()/3)+1;
+        str_bin = str_bin + "00";
+    }
+
+    string str_ter = "";
+    for( int i = 0; i < str_bin_size; i++) {
+        str_ter = str_ter + bin_to_ter(str_bin.substr(i*3, 3));
+    }
+
+
+
+    
+
+
+
+
+}
+
+// http://stackoverflow.com/questions/10184178/fastest-way-to-convert-string-to-binary
+string conv_string_to_bin_string(string s) {
+    string sret = "";
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        sret = sret + bitset<8>(s.c_str()[i]).to_string();
+        cout << sret << endl;
+        //cout << bitset<8>(s.c_str()[i]) << endl;
+    }
+
+    return sret;
+}
+
+string bin_to_ter(string s) {
+    cout << s << endl;
+    if (s.size() != 3) {
+        cout << "Not the right size" <<endl;
+        return "";
+    }
+ 
+    return tab_bin_to_ter[s]; 
+}
+
+
 int main(int argc, char *argv[]) {
+
     // GLFW Initialization
     if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -189,12 +280,16 @@ int main(int argc, char *argv[]) {
     
     // initialize our OpenGL program
     Init();
+
+    conv_ascii_to_RGB("ab");
+
     
     // render loop
     while(!glfwWindowShouldClose(window)) {
         Display();
         glfwSwapBuffers(window);
         glfwPollEvents();
+        break;
     }
 
     // close OpenGL window and terminate GLFW
