@@ -175,19 +175,21 @@ void rempl_c(int tab[]) {
 }
 
 // 
-void conv_ascii_to_RGB(string s) {
+string conv_ascii_to_RGB(string s) {
 
-
+    // convert to ascii
     string str_bin = "";
     for (int i = 0; i < s.size(); i++) {
         string sub = s.substr(i, 1);
         string sub_bin = conv_string_to_bin_string(sub);
 
         str_bin = str_bin + sub_bin;
-
-
     }
 
+    cout << "Binary: " << str_bin << endl;
+
+
+    // Add offset to be a multiple of 3
     int str_bin_size;
     if (str_bin.size()%3 == 0) {
         str_bin_size = str_bin.size()/3;
@@ -196,17 +198,26 @@ void conv_ascii_to_RGB(string s) {
         str_bin = str_bin + "00";
     } else if (str_bin.size()%3 == 2) {
         str_bin_size = (str_bin.size()/3)+1;
-        str_bin = str_bin + "00";
+        str_bin = str_bin + "0";
     }
 
+    cout << "Size_bin: " << str_bin << endl;
+
+
+    // convert to ternary
     string str_ter = "";
     for( int i = 0; i < str_bin_size; i++) {
         str_ter = str_ter + bin_to_ter(str_bin.substr(i*3, 3));
     }
 
+    cout << "Ternary: " << str_ter << endl;
 
 
-    
+    return str_ter;
+
+
+
+
 
 
 
@@ -218,15 +229,14 @@ string conv_string_to_bin_string(string s) {
     string sret = "";
     for (std::size_t i = 0; i < s.size(); ++i) {
         sret = sret + bitset<8>(s.c_str()[i]).to_string();
-        cout << sret << endl;
         //cout << bitset<8>(s.c_str()[i]) << endl;
     }
+
 
     return sret;
 }
 
 string bin_to_ter(string s) {
-    cout << s << endl;
     if (s.size() != 3) {
         cout << "Not the right size" <<endl;
         return "";
@@ -281,7 +291,7 @@ int main(int argc, char *argv[]) {
     // initialize our OpenGL program
     Init();
 
-    conv_ascii_to_RGB("ab");
+    conv_ascii_to_RGB("BONJOUR!!");
 
     
     // render loop
