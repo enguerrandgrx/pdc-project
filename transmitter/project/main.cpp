@@ -12,6 +12,9 @@
 
 #include <map>
 
+#include <thread>
+
+
 
 //#include <vector>;
 #include <string>
@@ -27,7 +30,7 @@ const GLfloat triangle_vertex_positions[] = {-1.0f, -1.0f, 0.0f,
 
 map<string, string> tab_bin_to_ter;
 
-
+GLFWwindow* window;
 
 GLuint loc_time;
 GLuint loc_starting;
@@ -43,7 +46,11 @@ GLuint loc_c6;
 GLuint loc_c7;
 GLuint loc_c8;
 
-int starting_time = 10000;
+string input = "Salut!!";
+string st;
+int counter;
+
+int starting_time = 10;
 
 int starting;
 
@@ -51,6 +58,8 @@ int starting;
 void rempl_c(int[]);
 string conv_string_to_bin_string(string s);
 string bin_to_ter(string s);
+string conv_ascii_to_RGB(string s);
+void Display(int tab[9]);
 
 
 
@@ -115,16 +124,101 @@ void Init() {
     tab_bin_to_ter["110"] = "20";
     tab_bin_to_ter["111"] = "21";
 
+
+    st = conv_ascii_to_RGB(input);
+
+
+    int rem_st_9 = st.size()%9;
+
+
+    switch(rem_st_9) {
+        case 0: break;
+        case 1: st = st + "22222222" ; break;
+        case 2: st = st + "2222222"; break;
+        case 3: st = st + "222222"; break;
+        case 4: st = st + "22222"; break;
+        case 5: st = st + "2222"; break;
+        case 6: st = st + "222"; break;
+        case 7: st = st + "22"; break;
+        case 8: st = st + "2"; break;
+    }
+
+    st = st + "222222222";
+
+    counter = 0;
+
+
+
 }
 
-void Display() {
-    glClear(GL_COLOR_BUFFER_BIT);
+void preDisplay() {
 
+    cout << "Mot à transmettre: " << input << endl;
+
+    while(!glfwWindowShouldClose(window)) {
+        
+        
+        float time = glfwGetTime() ;
+
+        int timef = time;
+
+        int timeim = timef%3;
+
+        int tab[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+
+        if (time > starting_time) {
+            string s = st.substr(counter*9, 9);
+
+            cout << s << endl;
+
+
+
+            for (int i = 0; i < 9; i++) {
+                tab[i] = stoi(s.substr(i, 1));
+            }
+
+            glUniform1i(loc_starting, 0);
+            counter++;
+
+            Display(tab);
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+
+            this_thread::sleep_for(chrono::seconds(1));
+
+
+        } else {
+
+        
+/*
+            Display(tab);
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();*/
+
+                Display(tab);
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+
+
+        }
+        //this_thread::sleep_for(chrono::seconds(1));
+
+
+    }
+
+
+}
+
+void Display(int tab[9]) {
+    glClear(GL_COLOR_BUFFER_BIT);
+/*
     int smap0[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     int smap1[9] = {0, 1, 2, 1, 2, 0, 2, 0, 1};
     int smap2[9] = {1, 2, 0, 2, 0, 1, 0, 1, 2};
     int smap3[9] = {2, 0, 1, 0, 1, 2, 1, 2, 0};
-
 
 
     float time = glfwGetTime() ;
@@ -137,7 +231,7 @@ void Display() {
         glUniform1i(loc_starting, 0);
     }
 
-    if(timeim == 0 && timef >= starting_time) {
+   if(timeim == 0 && timef >= starting_time) {
         rempl_c(smap1);
     } else if (timeim == 1 && timef >= starting_time) {
         rempl_c(smap2);
@@ -145,7 +239,16 @@ void Display() {
         rempl_c(smap3);
     }
 
+
+    float time = glfwGetTime() ;
+
+    int timef = time;
+
+    int timeim = timef%3;
     glUniform1i(loc_time, timeim);
+*/
+    rempl_c(tab);
+
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -201,7 +304,7 @@ string conv_ascii_to_RGB(string s) {
         str_bin = str_bin + "0";
     }
 
-    cout << "Size_bin: " << str_bin << endl;
+    //cout << "Size_bin: " << str_bin << endl;
 
 
     // convert to ternary
@@ -266,7 +369,10 @@ int main(int argc, char *argv[]) {
     // attempt to open the window: fails if required version unavailable
     // note some Intel GPUs do not support OpenGL 3.2
     // note update the driver of your graphic card
-    GLFWwindow* window = glfwCreateWindow(512, 512, "Project PDC", NULL, NULL);
+    
+    //GLFWwindow* window = glfwCreateWindow(512, 512, "Project PDC", NULL, NULL);
+    window = glfwCreateWindow(512, 512, "Project PDC", NULL, NULL);
+
     if(!window) {
         glfwTerminate();
         return EXIT_FAILURE;
@@ -290,17 +396,15 @@ int main(int argc, char *argv[]) {
     
     // initialize our OpenGL program
     Init();
-
-    conv_ascii_to_RGB("BONJOUR!!");
-
     
+    preDisplay();
+
     // render loop
-    while(!glfwWindowShouldClose(window)) {
-        Display();
+    /*while(!glfwWindowShouldClose(window)) {
+        preDisplay();
         glfwSwapBuffers(window);
         glfwPollEvents();
-        break;
-    }
+    }*/
 
     // close OpenGL window and terminate GLFW
     glfwDestroyWindow(window);
