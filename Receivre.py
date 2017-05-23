@@ -109,14 +109,14 @@ def detection(path):
     # on parcours l'image et on mets r a 0 si b ou r superieur a un seuil (ici 50)
     for x in range(0, r.shape[0]):
         for y in range(0, r.shape[1]):
-            if(b[x][y] > 50 or g[x][y] > 50):
+            if(b[x][y] > 100 or g[x][y] > 100):
                 r[x][y] = 0
 
 
 
     #print("--- %s seconds ---" % (time.time() - start_time))
 
-    cv2.imwrite('img_CV2_90.jpg', r)
+    #cv2.imwrite('img_CV2_90.jpg', r)
 
     # on applique un filtre binaire
     ret,seg_red = cv2.threshold(r,150,255.0,cv2.THRESH_BINARY)
@@ -128,6 +128,8 @@ def detection(path):
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     im2, cnts, hierarchy = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+
+
     #print(cnts)
     if(cnts == []):
         return [],[],[]
@@ -135,9 +137,13 @@ def detection(path):
     if(approx == []):
         return [],[],[]
     bord,config = bords(approx)
-    #plt.imshow(img)
+
+    # if(not (bord == [])):
+    #     plt.imshow(img)
+    #     plt.show()
+
     #plt.show()
-    sucess = 1
+    sucess = True
 
     print("les 4 bords de l'ecrans sont : ", bord)
     print("la configuration est la n°", config)
@@ -176,7 +182,7 @@ def color_detection (bord, config, path):
     if(type(path) == str):
         img = cv2.imread(path)
         path = img
-    elif(path == None):
+    elif(type(path) == None):
         return 'end'
 
     img = resize(path)
@@ -192,6 +198,8 @@ def color_detection (bord, config, path):
     #(min_x, max_x, min_y, max_y) = bord
     mid_x = int( min_x + (max_x - min_x)/2)
     mid_y = int( min_y + (max_y - min_y)/2)
+    #print("mid_x",mid_x)
+    #print("mid_y",mid_y)
 
     #print("min x : ", min_x, " max_x : ", max_x, " min y: ", min_y, " max y: ", max_y)
     if(config == 2):
@@ -222,11 +230,14 @@ def color_detection (bord, config, path):
         print("Error 2 : ", colors2)
         print("Image 1")
         plt.imshow(im1)
-        plt.show()
-
-        print("Image 2")
         plt.imshow(im2)
         plt.show()
+        time.sleep(5)
+        plt.close()
+
+        print("Image 2")
+        #plt.imshow(im2)
+        #plt.show()
         return 'error'
 
 
@@ -238,7 +249,9 @@ def cutting(img, indexX, indexY):
     colors = []
     x = img.shape[0]
     y = img.shape[1]
-    for i in range(0, indexX):
+    #print("x cutting",x)
+    #print("y cutting",y)
+    for i in range(0,indexX):
         #print("Index of i:", i)
         for j in range(0, indexY):
             #print("Index of j:", j)
@@ -293,6 +306,8 @@ def find_color(img):
     #plt.show()
     x = img.shape[0]
     y = img.shape[1]
+    #print("x",x)
+    #print("y",y)
     mid = img[int(x/2), int(y/2)]
     return witch_color(mid)
 
@@ -311,12 +326,15 @@ start_time = time.time()
 # In[22]:
 
 count = 0
-screen_detected = 0
+screen_detected = False
 error = 0
 config = -1
 bord = []
 colors = []
 color_prev = ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red']
+color_red = ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red']
+color_blue = ['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue']
+
 
 
 cap = cv2.VideoCapture(0)
@@ -331,7 +349,7 @@ while(True):
     if k == ord('q'):#press q to quit
         break
     bord, config, screen_detected = detection(frame)
-    if(not (screen_detected  ==  [])):
+    if(screen_detected):
         print("screen detected = ", screen_detected)
         break
     count += 1
@@ -341,24 +359,37 @@ print("total nb of round : ",count)
 print("detected colors : ",colors)
 print("--- %s seconds ---" % (time.time() - start_time))
 
-while(False):
+erreur = False
+
+while(True):
+    ret, frame = cap.read()
     color = color_detection(bord, config, frame)
-    if (color == color_prev):
-        print("discard")
-    elif(color == 'end'):
-        print('----END----')
-        break
-    elif(color == None or color == 'error'):
-        error = error + 1
-        if(error > 10):
+    #print("color",color)
+    if(not (color == color_red)):
+#        print("color",color)
+        if (color == color_prev):
+            b = "papate"
+        elif(color == 'end'):
+            color = color_blue
+            print('----END----')
             break
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        #plt.imshow(frame)
-        #plt.show()
-    else:
-        print("color : ", color)
-        colors.append(color)
-        color_prev = color
+        elif(color == None or color == 'error'):
+            if erreur:
+                error = error + 1
+                if(error > 10):
+                    break
+                image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            else:
+                erreur = True
+                time.sleep(0.1)
+
+            #plt.imshow(frame)
+            #plt.show()
+        else:
+            print("color : ", color)
+            colors.append(color)
+            color_prev = color
+            erreur = False
 
 
 
