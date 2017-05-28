@@ -49,7 +49,7 @@ def find_screen(cnts, image):
         print(approx_tmp)
         #cv2.drawContours(copieImg, [approx_tmp], -1, (col, 255-col, col), 4)
 
-        if (peri > 100 and peri < 400 and len(approx_tmp) == 4):
+        if (peri > 100 and peri < 400):# and len(approx_tmp) == 4):
             approx.append(approx_tmp)
             print(approx)
 
@@ -92,14 +92,14 @@ def bords(approx):
         if appro[1] < min_y:
             min_y = appro[1]
 
-    
+
     if((max_x - min_x)/(max_y - min_y)) < 1:
         config = 2
         mid_y = int( min_y + (max_y - min_y)/2)
         bord = [[min_x, max_x, min_y, mid_y],[min_x, max_x, mid_y, max_y]]
 
 
-    else: 
+    else:
         config = 1
         bord = [min_x, max_x, min_y, max_y]
 
@@ -185,13 +185,13 @@ def detection(path, color = 0): # --------
     if(cnts == []):
         return [],[]
     approx = find_screen(cnts, img)
-    
+
 
     if(approx == []):
         return [],[]
     bord, sucess = bords(approx)
 
-    
+
     print(approx)
 
     print("les 4 bords de l'ecrans sont : ", bord)
@@ -218,6 +218,7 @@ def color_detection (bord, path):
     img = resize(path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # bords = [min_x, max_x, min_y, max_y]
+    cv2.imwrite('img1_CV2_90_8.jpg', img)
 
     im1 = []
     im2 = []
@@ -250,23 +251,40 @@ def color_detection (bord, path):
     #    im2 = img[mid_x : max_x, mid_y : max_y]
 
     (bord1, bord2) = bord
+    print("bord 1 : ", bord1)
+    print("bord 2 : ", bord2)
+    print("diff bord 1",bord1[1]-bord1[0],bord1[3]-bord1[2])
+    print("diff bord 2", bord2[1]-bord2[0],bord2[3]-bord2[2])
 
-    im1 = img[bord1[0] : bord1[1] , bord1[2] : bord1[3]]
-    im2 = img[bord2[0] : bord2[1], bord2[2] : bord2[3]]
+
+
+    im1 = img[bord1[2]:bord1[3],:]
+    im2 = img[bord2[2]:bord2[3],:]
+
+    im1 = im1[:,bord1[0]:bord1[1]]
+    im2 = im2[:,bord2[0]:bord2[1]]
+
+    print(im1.shape[0], im1.shape[1])
+    print(im2.shape[0], im2.shape[1])
+
+    cv2.imwrite('img1_CV2_90.jpg', im1)
+    cv2.imwrite('img2_CV2_90.jpg', im2)
+
 
     colors1 = cutting(im1, 3, 3)
     colors2 = cutting(im2, 3, 3)
     if(colors1 == colors2):
+
         return colors1
     else:
         print("Error 1 : ", colors1)
         print("Error 2 : ", colors2)
         print("Image 1")
-        plt.imshow(im1)
-        plt.imshow(im2)
-        plt.show()
-        time.sleep(5)
-        plt.close()
+        #plt.imshow(im1)
+        #plt.imshow(im2)
+        #plt.show()
+        #time.sleep(5)
+        #plt.close()
 
         print("Image 2")
         #plt.imshow(im2)
@@ -437,8 +455,8 @@ erreur = False
 
 while(True):
     ret, frame = cap.read()
-    color = color_detection(bord, config, frame)
-    #print("color",color)
+    color = color_detection(bord, frame)
+    print("color: ",color)
     if(not (color == color_red)):
 #        print("color",color)
         if (color == color_prev):
