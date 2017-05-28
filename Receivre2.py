@@ -114,7 +114,7 @@ def detection(path, color = 0): # --------
     for x in range(0, r.shape[0]):
         for y in range(0, r.shape[1]):
             if color == 0:
-                if(b[x][y] > 100 or g[x][y] > 100 and r[x][y] < 150):
+                if(b[x][y] > 100 or g[x][y] > 100 and r[x][y] < 200):
                     r[x][y] = 0
             elif color == 1:
                 if(r[x][y] > 100 or b[x][y] > 100 and g[x][y] < 150):
@@ -146,7 +146,7 @@ def detection(path, color = 0): # --------
     closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
     im2, cnts, hierarchy = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    print(1111)
+
 
     #print(cnts)
     if(cnts == []):

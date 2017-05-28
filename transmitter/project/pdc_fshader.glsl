@@ -30,11 +30,11 @@ void main() {
         if (uv.r <= 0.0 && uv.g >= 0.0) {
             color = vec3(1.0, 0.0, 0.0);
         } else if (uv.r >= 0.0 && uv.g >= 0.0) {
-            color = vec3(0.0, 1.0, 0.0);
+            color = vec3(0.0, 0.0, 0.0);
         } else if (uv.r <= 0.0 && uv.g <= 0.0) {
-            color = vec3(0.0, 0.0, 1.0);
+            color = vec3(0.0, 0.0, 0.0);
         } else {
-            color = vec3(1.0, 1.0, 1.0);
+            color = vec3(0.0, 0.0, 1.0);
         }
         //color = vec3(1.0, 0.0, 0.0);
 

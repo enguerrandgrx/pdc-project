@@ -50,7 +50,7 @@ string input = "Salut!!";
 string st;
 int counter;
 
-int starting_time = 10;
+int starting_time = 15;
 
 int starting;
 
