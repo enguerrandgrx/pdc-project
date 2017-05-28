@@ -208,7 +208,7 @@ def detection(path, color = 0): # --------
 
 # In[10]:
 
-def color_detection (bord, config, path):
+def color_detection (bord, path):
     if(type(path) == str):
         img = cv2.imread(path)
         path = img
@@ -224,32 +224,35 @@ def color_detection (bord, config, path):
     colors1 = []
     colors2 = []
     # ========================= A Verifier ======================
-    (min_y, max_y, min_x, max_x) = bord
+    #(min_y, max_y, min_x, max_x) = bord
     #(min_x, max_x, min_y, max_y) = bord
-    mid_x = int( min_x + (max_x - min_x)/2)
-    mid_y = int( min_y + (max_y - min_y)/2)
+    #mid_x = int( min_x + (max_x - min_x)/2)
+    #mid_y = int( min_y + (max_y - min_y)/2)
     #print("mid_x",mid_x)
     #print("mid_y",mid_y)
 
     #print("min x : ", min_x, " max_x : ", max_x, " min y: ", min_y, " max y: ", max_y)
-    if(config == 2):
-        #Image dans la hauteur - ie
-        im1 = img[min_x: max_x, min_y: mid_y ]
-        im2 = img[min_x: max_x , mid_y:max_y ]
-    elif(config == 1):
-        #Image dans la Longeur - ie
-        im1 = img[min_x : mid_x , min_y:max_y]
-        im2 = img[mid_x : max_x, min_y:max_y]
-    elif(config == 3):
+    #if(config == 2):
+    #    #Image dans la hauteur - ie
+    #    im1 = img[min_x: max_x, min_y: mid_y ]
+    #    im2 = img[min_x: max_x , mid_y:max_y ]
+    #elif(config == 1):
+    #    #Image dans la Longeur - ie
+    #    im1 = img[min_x : mid_x , min_y:max_y]
+    #    im2 = img[mid_x : max_x, min_y:max_y]
+    #elif(config == 3):
+    #    #Image dans  - ie
+    #    im1 = img[min_x : mid_x, mid_y : max_y]
+    #    im2 = img[mid_x : max_x, min_y : mid_y]
+    #elif(config == 4):
         #Image dans  - ie
-        im1 = img[min_x : mid_x, mid_y : max_y]
-        im2 = img[mid_x : max_x, min_y : mid_y]
-    elif(config == 4):
-        #Image dans  - ie
-        im1 = img[min_x : mid_x , min_y : mid_y]
-        im2 = img[mid_x : max_x, mid_y : max_y]
+    #    im1 = img[min_x : mid_x , min_y : mid_y]
+    #    im2 = img[mid_x : max_x, mid_y : max_y]
 
+    (bord1, bord2) = bord
 
+    im1 = img[bord1[0] : bord1[1] , bord1[2] : bord1[3]]
+    im2 = img[bord2[0] : bord2[1], bord2[2] : bord2[3]]
 
     colors1 = cutting(im1, 3, 3)
     colors2 = cutting(im2, 3, 3)
