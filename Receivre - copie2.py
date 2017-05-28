@@ -25,14 +25,14 @@ def resize(im):
 
 # In[3]:
 
-def find_screen(cnts, image):
+def find_screen(cnts_red, cnts_green, image):
     total = 0
     approx_tmp = 0
     approx = []
     # loop over the contours
     #print("cnts")
     #print(cnts)
-    for c in cnts:
+    for c in cnts_red:
         # approximate the contour
         peri = cv2.arcLength(c, True)
         print("perimetre ", peri)
@@ -42,12 +42,27 @@ def find_screen(cnts, image):
         cv2.drawContours(image, [approx_tmp], -1, (0, 255, 0), 4)
         #print("approx_tmp ",approx_tmp)
         #print("len approx_tmp",len(approx_tmp))
-        if (peri > 100 and peri < 300):
+        if (peri > 100 and peri < 500):
             approx.append(approx_tmp)
             #print(approx)
             cv2.drawContours(image, [approx_tmp], -1, (0, 255, 0), 4)
-    plt.imshow(image)
-    plt.show()
+    
+    for c in cnts_green:
+        # approximate the contour
+        peri = cv2.arcLength(c, True)
+        print("perimetre ", peri)
+        approx_tmp = cv2.approxPolyDP(c, 0.02 * peri, True)
+        approx_tmp = np.squeeze(approx_tmp)
+        #print(approx)
+        cv2.drawContours(image, [approx_tmp], -1, (0, 255, 0), 4)
+        #print("approx_tmp ",approx_tmp)
+        #print("len approx_tmp",len(approx_tmp))
+        if (peri > 100 and peri < 500):
+            approx.append(approx_tmp)
+            #print(approx)
+            cv2.drawContours(image, [approx_tmp], -1, (0, 255, 0), 4)
+    #plt.imshow(image)
+    #plt.show()
     #print("approx ",approx)
     print("len approx ",len(approx))
     return approx
@@ -56,29 +71,33 @@ def find_screen(cnts, image):
 # In[4]:
 
 def bords(approx):
-
-
+    if len(approx) == 2:
+        bord = []
+        min_x = sys.maxsize
+        max_x = 0
+        min
+    
     # if(len(approx) == 2):
     #     approx = np.concatenate((approx[0], approx[1]), axis = 0)
     # approx = np.squeeze(approx)
-    bord = []
-    min_x = sys.maxsize
-    max_x = 0
-    min_y = sys.maxsize
-    max_y = 0
-    #config = -1
-    for appro in approx:
-        if appro[0] > max_x:
-            max_x = appro[0]
-        if appro[0] < min_x:
-            min_x = appro[0]
-        if appro[1] > max_y:
-            max_y = appro[1]
-        if appro[1] < min_y:
-            min_y = appro[1]
-
-    bord.extend([min_x, max_x, min_y, max_y])
-
+    # bord = []
+    # min_x = sys.maxsize
+    # max_x = 0
+    # min_y = sys.maxsize
+    # max_y = 0
+    # config = -1
+    # for appro in approx:
+    #     if appro[0] > max_x:
+    #         max_x = appro[0]
+    #     if appro[0] < min_x:
+    #         min_x = appro[0]
+    #     if appro[1] > max_y:
+    #         max_y = appro[1]
+    #     if appro[1] < min_y:
+    #         min_y = appro[1]
+    # 
+    # bord.extend([min_x, max_x, min_y, max_y])
+    # 
     # if(len(approx) == 4):
     #     if(max_x - min_x > max_y - min_y):
     #         config = 2
@@ -92,39 +111,33 @@ def bords(approx):
     #         config = 3
     #     else:
     #         config = 4
-    # return bord,config
-
-    return bord
+    return bord,config
 
 
 # In[5]:
 
-def detection(path, color = 0): # --------
+def detection(path):
     start_time = time.time()
     if(type(path) == str):
         img = cv2.imread(path)
         path = img
     img = resize(path)
     #on split l'image en fonction des couleurs
-    b,g,r = cv2.split(img)
+    b_red,g_red,r_red = cv2.split(img)
+    b_green,g_green,r_green = cv2.split(img)
 
     #print("--- %s seconds ---" % (time.time() - start_time))
 
     # on parcours l'image et on mets r a 0 si b ou r superieur a un seuil (ici 50)
-    for x in range(0, r.shape[0]):
-        for y in range(0, r.shape[1]):
-            if color == 0:
-                if(b[x][y] > 100 or g[x][y] > 100 and r[x][y] < 150):
-                    r[x][y] = 0
-            elif color == 1:
-                if(r[x][y] > 100 or b[x][y] > 100 and g[x][y] < 150):
-                    g[x][y] = 0
-            elif color == 2:
-                if(r[x][y] > 100 or g[x][y] > 100 and b[x][y] < 150) 
-                    b[x][y] = 0
-            elif color == 3:    
-                if(b[x][y] < 150 and g[x][y] > 100 and r[x][y] < 150):
-                    r[x][y] = 0
+    for x in range(0, r_red.shape[0]):
+        for y in range(0, r_red.shape[1]):
+            if(b_red[x][y] > 100 or g_red[x][y] > 100):
+                r_red[x][y] = 0
+
+    for x in range(0, r_green.shape[0]):
+        for y in range(0, r_green.shape[1]):
+            if(b_green[x][y] > 100 or r_green[x][y] > 100):
+                g_green[x][y] = 0
 
 
     #print("--- %s seconds ---" % (time.time() - start_time))
@@ -132,30 +145,61 @@ def detection(path, color = 0): # --------
     #cv2.imwrite('img_CV2_90.jpg', r)
 
     # on applique un filtre binaire
-    if (color == 0 or color == 3):
-        ret,seg = cv2.threshold(r,150,255.0,cv2.THRESH_BINARY)
-    elif color == 1:
-        ret,seg = cv2.threshold(g,150,255.0,cv2.THRESH_BINARY)
-    elif color == 2:
-        ret,seg = cv2.threshold(b,150,255.0,cv2.THRESH_BINARY)
+    ret,seg_red = cv2.threshold(r,150,255.0,cv2.THRESH_BINARY)
+    ret,seg_green = cv2.threshold(g,150,255.0,cv2.THRESH_BINARY)
 
-    # cv2.imwrite('img_CV2_90.jpg', seg)
+    # cv2.imwrite('img_CV2_90.jpg', seg_red)
     # detecte
-    edged = cv2.Canny(seg, 100, 100)
+    edged_red = cv2.Canny(seg_red, 100, 100)
+    edged_green = cv2.Canny(seg_green, 100, 100)
+    
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    closed = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
-    im2, cnts, hierarchy = cv2.findContours(closed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    closed_red = cv2.morphologyEx(edged_red, cv2.MORPH_CLOSE, kernel)
+    closed_green = cv2.morphologyEx(edged_green, cv2.MORPH_CLOSE, kernel)
+    
+    im2, cnts_red, hierarchy = cv2.findContours(closed_red.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    im2, cnts_green, hierarchy = cv2.findContours(closed_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-
-
-    #print(cnts)
-    if(cnts == []):
+    if(len(cnts_red) + len(cnts_green) == 0):
         return [],[],[]
-    approx = find_screen(cnts, img)
-    if(approx == []):
-        return [],[],[]
-    bord = bords(approx)
+        
+    if(len(cnts_red) == 0):
+        approx = find_screen(cnts_green, img)
+        if(approx == []):
+            return [],[],[]
+        else:
+            bord, config = bords(approx)
+            config = 1
+            sucess = True
+            print("les 4 bords de l'ecrans sont : ", bord)
+            print("la configuration est la n°", config)
+            print("--- %s seconds ---" % (time.time() - start_time))
+            return bord,config,sucess
 
+    elif(len(cnts_green) == 0):
+        approx = find_screen(cnts_red, img)
+        if(approx == []):
+            return [],[],[]
+        else:
+            bord,config = bords(approx)
+            config = 2
+            sucess = True
+            print("les 4 bords de l'ecrans sont : ", bord)
+            print("la configuration est la n°", config)
+            print("--- %s seconds ---" % (time.time() - start_time))
+            return bord,config,sucess
+
+            
+    else:
+        approx_r = find_screen(cnts_red, img)
+        approx_g = find_screen(cnts_green, img)
+    
+        if(approx_r == [] and approx_g == []):
+            return [],[],[]
+        
+        else:
+            
     # if(not (bord == [])):
     #     plt.imshow(img)
     #     plt.show()
@@ -164,10 +208,10 @@ def detection(path, color = 0): # --------
     sucess = True
 
     print("les 4 bords de l'ecrans sont : ", bord)
-    #print("la configuration est la n°", config)
+    print("la configuration est la n°", config)
     print("--- %s seconds ---" % (time.time() - start_time))
 
-    return bord,sucess
+    return bord,config,sucess
 
 
 
@@ -366,13 +410,7 @@ while(True):
     k= cv2.waitKey(1)
     if k == ord('q'):#press q to quit
         break
-
-    for i in range(4):
-        bord, screen_detected = detection(frame, i)
-        print(bord)
-    
-
-
+    bord, config, screen_detected = detection(frame)
     if(screen_detected):
         print("screen detected = ", screen_detected)
         break
