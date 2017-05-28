@@ -77,7 +77,7 @@ def bords(approx):
     max_x = 0
     min_y = sys.maxsize
     max_y = 0
-    #config = -1
+    config = 0
     if(len(approx) == 1):
         approx = approx[0]
     #print("approx 0 ",approx)
@@ -92,7 +92,17 @@ def bords(approx):
         if appro[1] < min_y:
             min_y = appro[1]
 
-    bord.extend([min_x, max_x, min_y, max_y])
+    
+    if((max_x - min_x)/(max_y - min_y)) < 1:
+        config = 2
+        mid_y = int( min_y + (max_y - min_y)/2)
+        bord = [[min_x, max_x, min_y, mid_y],[min_x, max_x, mid_y, max_y]]
+
+
+    else: 
+        config = 1
+        bord = [min_x, max_x, min_y, max_y]
+
 
     # if(len(approx) == 4):
     #     if(max_x - min_x > max_y - min_y):
@@ -109,7 +119,7 @@ def bords(approx):
     #         config = 4
     # return bord,config
 
-    return bord
+    return bord, config
 
 
 # In[5]:
@@ -175,16 +185,13 @@ def detection(path, color = 0): # --------
     if(cnts == []):
         return [],[]
     approx = find_screen(cnts, img)
+    
+
     if(approx == []):
         return [],[]
-    bord = bords(approx)
+    bord, sucess = bords(approx)
 
-    # if(not (bord == [])):
-    #     plt.imshow(img)
-    #     plt.show()
-
-    #plt.show()
-    sucess = True
+    
     print(approx)
 
     print("les 4 bords de l'ecrans sont : ", bord)
@@ -194,25 +201,6 @@ def detection(path, color = 0): # --------
     return bord,sucess
 
 
-
-# In[6]:
-
-# bord1, config1, sucss = detection('screen_red1.png')
-#
-#
-# # In[7]:
-#
-# bord2, config2, s = detection('screen_red2.png')
-#
-#
-# # In[8]:
-#
-# bord3, config3, s = detection('screen_red3.png')
-#
-#
-# # In[9]:
-#
-# bord4, config4, s = detection('screen_red4.png')
 
 
 # Part 2: Color detection
@@ -363,6 +351,7 @@ start_time = time.time()
 #
 
 # Part 3: From Video
+
 # ================
 
 # In[22]:
@@ -377,7 +366,8 @@ color_prev = ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red']
 color_red = ['red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red']
 color_blue = ['blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue', 'blue']
 
-
+bord_blue = []
+bord_red = []
 
 cap = cv2.VideoCapture(0)
 if not(cap.isOpened()):
@@ -386,8 +376,8 @@ if not(cap.isOpened()):
 
 redD = 0
 blueD = 0
-greenD = 1
-pinkD = 1
+#greenD = 1
+#pinkD = 1
 while(True):
     ret, frame = cap.read()
     k= cv2.waitKey(1)
@@ -398,33 +388,40 @@ while(True):
     for i in range(4):
         if i == 0 and redD == 0:
             print("RED")
-            bord, screen_detected = detection(frame, i)
+            bord_red, screen_detected = detection(frame, i)
             print(bord)
 
             if screen_detected:
-                redD = 1
-        elif i == 1 and greenD == 0:
-            print("GREEN")
-            bord, screen_detected = detection(frame, i)
-            print(bord)
+                redD = screen_detected
+        #elif i == 1 and greenD == 0:
+        #    print("GREEN")
+        #    bord, screen_detected = detection(frame, i)
+        #    print(bord)
 
-            if screen_detected:
-                greenD = 1
+        #    if screen_detected:
+        #        greenD = 1
         elif i == 2 and blueD == 0:
             print("BLUE")
-            bord, screen_detected = detection(frame, i)
+            bord_blue, screen_detected = detection(frame, i)
             if screen_detected:
-                blueD = 1
-        elif i == 3 and pinkD == 0:
-            print("PINK")
-            bord, screen_detected = detection(frame, i)
-            if screen_detected:
-                pinkD = 1
+                blueD = screen_detected
+        #elif i == 3 and pinkD == 0:
+        #   print("PINK")
+        #  bord, screen_detected = detection(frame, i)
+        #  if screen_detected:
+        #      pinkD = 1
 
-        screen_detected = redD + blueD + greenD + pinkD
+        screen_detected = redD + blueD
 
-    if(screen_detected == 4):
+    if(screen_detected == 2):
+        if(len(bord_blue) == 2):
+            bord = bord_blue
+        elif(len(bord_red) == 2):
+            bord = bord_red
+        else:
+            bord = [bord_red, bord_blue]
         print("screen detected = ", screen_detected)
+        print("Bords : ", bord)
         break
     count += 1
     print(count)
