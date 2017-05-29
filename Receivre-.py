@@ -218,7 +218,7 @@ def color_detection (bord, path):
     img = resize(path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # bords = [min_x, max_x, min_y, max_y]
-    cv2.imwrite('img1_CV2_90_8.jpg', img)
+    #cv2.imwrite('img1_CV2_90_8.jpg', img)
 
     im1 = []
     im2 = []
@@ -251,10 +251,10 @@ def color_detection (bord, path):
     #    im2 = img[mid_x : max_x, mid_y : max_y]
 
     (bord1, bord2) = bord
-    print("bord 1 : ", bord1)
-    print("bord 2 : ", bord2)
-    print("diff bord 1",bord1[1]-bord1[0],bord1[3]-bord1[2])
-    print("diff bord 2", bord2[1]-bord2[0],bord2[3]-bord2[2])
+    #print("bord 1 : ", bord1)
+    #print("bord 2 : ", bord2)
+    #print("diff bord 1",bord1[1]-bord1[0],bord1[3]-bord1[2])
+    #print("diff bord 2", bord2[1]-bord2[0],bord2[3]-bord2[2])
 
 
 
@@ -264,11 +264,11 @@ def color_detection (bord, path):
     im1 = im1[:,bord1[0]:bord1[1]]
     im2 = im2[:,bord2[0]:bord2[1]]
 
-    print(im1.shape[0], im1.shape[1])
-    print(im2.shape[0], im2.shape[1])
+    #print(im1.shape[0], im1.shape[1])
+    #print(im2.shape[0], im2.shape[1])
 
-    cv2.imwrite('img1_CV2_90.jpg', im1)
-    cv2.imwrite('img2_CV2_90.jpg', im2)
+    #cv2.imwrite('img1_CV2_90.jpg', im1)
+    #cv2.imwrite('img2_CV2_90.jpg', im2)
 
 
     colors1 = cutting(im1, 3, 3)
@@ -283,7 +283,7 @@ def color_detection (bord, path):
     #     #plt.show()
     #     #time.sleep(5)
     #     #plt.close()
-    # 
+    #
     #     #plt.imshow(im2)
     #     #plt.show()
     #     return colors1, colors2
@@ -366,18 +366,18 @@ transl = {'00': '000', '01': '001', '02': '010', '10': '011', '11': '100', '12':
 
 def ter_to_bin(s):
     str_bin = ""
-    
+
     for i in range(0, int(len(s)), 2):
         str_bin = str_bin + transl[s[i:i+2]]
-                
+
     return str_bin
 
 # https://stackoverflow.com/questions/7396849/convert-binary-to-ascii-and-vice-versa
 def bin_to_ascii(s):
-    
+
     rem_mod_8 = len(s)%8;
     s2 = "";
-    
+
     if (rem_mod_8 == 0):
         print(0)
         s2 = s
@@ -387,14 +387,14 @@ def bin_to_ascii(s):
     elif (rem_mod_8 == 2):
         print(2)
         s2 = s[0:len(s)-2]
-    
+
     print(len(s2))
-    
+
     s2 = int((s2), 2)
-    
+
     return s2.to_bytes((s2.bit_length() + 7) // 8, 'big').decode()
-    
-    
+
+
 def ter_to_ascii(s):
     return bin_to_ascii(ter_to_bin(s))
 
@@ -487,39 +487,47 @@ while(True):
     print(count)
 
 print("total nb of round : ",count)
-print("detected colors : ",colors)
+#print("detected colors : ",colors)
 print("--- %s seconds ---" % (time.time() - start_time))
 
 error_count = 0
 
+begin = False
+
+counter = 0
+
 while(True):
+    time2 = time.time()
     ret, frame = cap.read()
     color = color_detection(bord, frame)
     #print("color: ",color)
-    
-    if (color[0] == color_red or color[0] == color_blue or color[1] == color_red or color[1] == color_blue:
+
+    if ((color[0] == color_red or color[0] == color_blue or color[1] == color_red or color[1] == color_blue) and not begin):
         pass
     else:
         if (color[0] == color_prev0 and color[1] == color_prev1):
+            begin = True
             pass
         elif(color[0] == color_blue or color[1] == color_blue):
             print('----END----')
             break
         elif(color[0] != color[1]):
+            begin = True
             error_count = error_count + 1
             if error_count > 2:
                 print("-- Error, two differents colors detected --")
                 print("Color 1 : ", color[0])
                 print("Color 2 : ", color[1])
-                
+
                 colors0.append(color[0])
                 colors1.append(color[1])
-                
+
                 color_prev0 = color[0]
                 color_prev1 = color[1]
-                
+
                 error_count = 0
-                
+                counter = 0
+
                 #if(error > 10):
                 #image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             else:
@@ -528,34 +536,49 @@ while(True):
             #plt.imshow(frame)
             #plt.show()
         else:
-            error_count = 0
-            print("Color : ", color)
-            colors0.append(color[0])
-            colors1.append(color[1])
-            color_prev0 = color[0]
-            color_prev1 = color[1]
+            if counter == 0 or counter == 1:
+                counter = counter + 1
+            else:
+                begin = True
+                error_count = 0
+                print("Color : ", color)
+                colors0.append(color[0])
+                colors1.append(color[1])
+                color_prev0 = color[0]
+                color_prev1 = color[1]
+                counter = 0
+    #print(time.time() - time2)
 
 
 ter = ""
 
 tr_ter = {'red': '0', 'green': '1', 'blue': '2'}
 
+colors0 = np.array(colors0)
+
+colors0 = colors0.flatten()
 
 for i in range(len(colors0)):
-    ter = ter + tr_ter[colors[i]]
+    ter = ter + tr_ter[colors0[i]]
 
 #ter = ter[:-8]
 
 ter = ter.rstrip('2')
 
+#print(ter)
+
 if(len(ter)%2 == 1):
     ter = ter + '2'
 
+print(ter)
 
-mot = ter_to_ascii(tr_ter)
+
+mot = ter_to_ascii(ter)
 
 print('Mot transmis: ')
 print(mot)
+print("--- %s seconds ---" % (time.time() - start_time))
+
 # In[23]:
 
 
