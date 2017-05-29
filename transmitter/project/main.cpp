@@ -46,20 +46,23 @@ GLuint loc_c6;
 GLuint loc_c7;
 GLuint loc_c8;
 
-string input = "Salut!!";
+string input = "jmhdkjhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 string st;
 int counter;
 
-int starting_time = 15;
+int starting_time = 10;
 
 int starting;
 
+int last;
+
 // Annonce fonction
-void rempl_c(int[]);
+void rempl_c(int[], int par);
 string conv_string_to_bin_string(string s);
 string bin_to_ter(string s);
 string conv_ascii_to_RGB(string s);
-void Display(int tab[9]);
+void Display(int tab[9], int par);
+string conv_ascii_to_RGB2(string s);
 
 
 
@@ -125,10 +128,10 @@ void Init() {
     tab_bin_to_ter["111"] = "21";
 
 
-    st = conv_ascii_to_RGB(input);
+    st = conv_ascii_to_RGB2(input);
 
 
-    int rem_st_9 = st.size()%9;
+/*    int rem_st_9 = st.size()%9;
 
 
     switch(rem_st_9) {
@@ -142,10 +145,12 @@ void Init() {
         case 7: st = st + "22"; break;
         case 8: st = st + "2"; break;
     }
-
-    st = st + "222222222";
+*/
+    st = st + "22222222";
 
     counter = 0;
+
+    last = st.size()/8;
 
 
 
@@ -154,6 +159,9 @@ void Init() {
 void preDisplay() {
 
     cout << "Mot à transmettre: " << input << endl;
+
+    int par = 1;
+
 
     while(!glfwWindowShouldClose(window)) {
         
@@ -164,29 +172,36 @@ void preDisplay() {
 
         int timeim = timef%3;
 
-        int tab[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+        int tab[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         if (time > starting_time) {
-            string s = st.substr(counter*9, 9);
+            string s = st.substr(counter*8, 8);
 
             cout << s << endl;
 
 
 
-            for (int i = 0; i < 9; i++) {
+            for (int i = 0; i < 8; i++) {
                 tab[i] = stoi(s.substr(i, 1));
             }
 
             glUniform1i(loc_starting, 0);
             counter++;
+            
+            if(counter == last) {
+                par = 2;
+            }
+            
+            //cout << par << endl;
 
-            Display(tab);
+            Display(tab, par);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
 
-            this_thread::sleep_for(chrono::seconds(1));
+            this_thread::sleep_for(chrono::milliseconds(400));
+            
+            par = (par + 1)%2;
 
 
         } else {
@@ -198,7 +213,7 @@ void preDisplay() {
             glfwSwapBuffers(window);
             glfwPollEvents();*/
 
-                Display(tab);
+                Display(tab, par);
                 glfwSwapBuffers(window);
                 glfwPollEvents();
 
@@ -212,7 +227,7 @@ void preDisplay() {
 
 }
 
-void Display(int tab[9]) {
+void Display(int tab[8], int par) {
     glClear(GL_COLOR_BUFFER_BIT);
 /*
     int smap0[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -247,7 +262,7 @@ void Display(int tab[9]) {
     int timeim = timef%3;
     glUniform1i(loc_time, timeim);
 */
-    rempl_c(tab);
+    rempl_c(tab, par);
 
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -264,7 +279,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode,
     }
 }
 
-void rempl_c(int tab[]) {
+void rempl_c(int tab[], int par) {
     glUniform1i(loc_c0, tab[0]);
     glUniform1i(loc_c1, tab[1]);
     glUniform1i(loc_c2, tab[2]);
@@ -273,7 +288,7 @@ void rempl_c(int tab[]) {
     glUniform1i(loc_c5, tab[5]);
     glUniform1i(loc_c6, tab[6]);
     glUniform1i(loc_c7, tab[7]);
-    glUniform1i(loc_c8, tab[8]);
+    glUniform1i(loc_c8, par);
     return;
 }
 
@@ -318,14 +333,41 @@ string conv_ascii_to_RGB(string s) {
 
     return str_ter;
 
-
-
-
-
-
-
-
 }
+
+
+string conv_ascii_to_RGB2(string s) {
+    string str_bin = "";
+    for(int i = 0; i < s.size(); i++) {
+        string car = s.substr(i, 1);
+        string car_bin = conv_string_to_bin_string(car);
+        car_bin = car_bin + '0';
+        
+        for(int j = 0; j < 3; j++) {
+            string sub3 = car_bin.substr(j*3, 3);
+            int k = sub3[0] - '0';
+            int l = sub3[1] - '0';
+            int m = sub3[2] - '0';
+            
+            
+            int sum = (k+l+m)%2;
+            car_bin = car_bin + to_string(sum);
+        }
+        
+        str_bin = str_bin + car_bin;
+    }
+    
+    cout << str_bin << endl;
+    
+    string str_ter = "";
+    for( int i = 0; i < s.size()*4; i++) {
+        str_ter = str_ter + bin_to_ter(str_bin.substr(i*3, 3));
+    }
+    
+    return str_ter;
+}
+
+
 
 // http://stackoverflow.com/questions/10184178/fastest-way-to-convert-string-to-binary
 string conv_string_to_bin_string(string s) {
