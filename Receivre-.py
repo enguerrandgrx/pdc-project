@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -62,9 +57,6 @@ def find_screen(cnts, image):
     # print("approx ",approx)
     # print("len approx ",len(approx))
     return approx
-
-
-# In[4]:
 
 def bords(approx):
 
@@ -200,13 +192,7 @@ def detection(path, color = 0): # --------
 
     return bord,sucess
 
-
-
-
 # Part 2: Color detection
-# ================
-
-# In[10]:
 
 def color_detection (bord, path):
     if(type(path) == str):
@@ -290,9 +276,6 @@ def color_detection (bord, path):
 
     return [colors1, colors2]
 
-
-# In[11]:
-
 # this function take an image and two index,
 def cutting(img, indexX, indexY):
     colors = []
@@ -311,9 +294,6 @@ def cutting(img, indexX, indexY):
             colors.append(color)
     return colors
 
-
-# In[12]:
-
 rgb_dictionary = {
     #
     (255,0,0): 'red',
@@ -326,17 +306,11 @@ rgb_dictionary = {
     #(0,0,0): 'black'
 }
 
-
-# In[13]:
-
 #This function
 def distance(c1, c2):
     (r1,g1,b1) = c1
     (r2,g2,b2) = c2
     return math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
-
-
-# In[14]:
 
 # this function take a point and find its color
 def witch_color(point):
@@ -345,9 +319,6 @@ def witch_color(point):
     closest_color = closest_colors[0]
     code = rgb_dictionary[closest_color]
     return code
-
-
-# In[15]:
 
 # this function take an square and output its color
 def find_color(img):
@@ -362,7 +333,7 @@ def find_color(img):
 
 
 
-transl = {'00': '000', '01': '001', '02': '010', '10': '011', '11': '100', '12': '101', '20': '110', '21': '111'}
+transl = {'00': '000', '01': '001', '02': '010', '10': '011', '11': '100', '12': '101', '20': '110', '21': '111', '22': '111'} # 22 should not happen
 
 def ter_to_bin(s):
     str_bin = ""
@@ -379,16 +350,16 @@ def bin_to_ascii(s):
     s2 = "";
 
     if (rem_mod_8 == 0):
-        print(0)
+        #print(0)
         s2 = s
     elif (rem_mod_8 == 1):
-        print(1)
+        #print(1)
         s2 = s[0:len(s)-1]
     elif (rem_mod_8 == 2):
-        print(2)
+        #print(2)
         s2 = s[0:len(s)-2]
 
-    print(len(s2))
+    #print(len(s2))
 
     s2 = int((s2), 2)
 
@@ -398,19 +369,10 @@ def bin_to_ascii(s):
 def ter_to_ascii(s):
     return bin_to_ascii(ter_to_bin(s))
 
-# In[16]:
+
 
 start_time = time.time()
-#
-# # print(color_detection(bord3, config3, 'color_screen3.png'))
-# print("--- %s seconds ---" % (time.time() - start_time))
-#
 
-# Part 3: From Video
-
-# ================
-
-# In[22]:
 
 count = 0
 screen_detected = False
@@ -432,7 +394,7 @@ bord_red = []
 cap = cv2.VideoCapture(0)
 if not(cap.isOpened()):
     cap.open()
-    print("pas bon")
+    print("Camera not detected")
 
 redD = 0
 blueD = 0
@@ -496,6 +458,8 @@ begin = False
 
 counter = 0
 
+final_counter = 0;
+
 while(True):
     time2 = time.time()
     ret, frame = cap.read()
@@ -505,13 +469,19 @@ while(True):
     if ((color[0] == color_red or color[0] == color_blue or color[1] == color_red or color[1] == color_blue) and not begin):
         pass
     else:
+        #print("final_counter ",final_counter)
         if (color[0] == color_prev0 and color[1] == color_prev1):
+            final_counter = final_counter + 1
+            if(final_counter > 100):
+                print('----END----')
+                break
             begin = True
             pass
-        elif(color[0] == color_blue or color[1] == color_blue):
+        elif(color[0] == color_blue or color[1] == color_blue or (final_counter > 100)):
             print('----END----')
             break
         elif(color[0] != color[1]):
+            final_counter = 0
             begin = True
             error_count = error_count + 1
             if error_count > 2:
@@ -536,7 +506,8 @@ while(True):
             #plt.imshow(frame)
             #plt.show()
         else:
-            if counter == 0 or counter == 1:
+            final_counter = 0
+            if counter == 0:
                 counter = counter + 1
             else:
                 begin = True
@@ -549,43 +520,85 @@ while(True):
                 counter = 0
     #print(time.time() - time2)
 
+#
+#
+# for i in range(len(colors0)):
+#     ter = ter + tr_ter[colors0[i]]
+#
+# #ter = ter[:-8]
+#
+# ter = ter.rstrip('2')
+#
+# #print(ter)
+#
+# if(len(ter)%2 == 1):
+#     ter = ter + '2'
+#
+# print(ter)
 
-ter = ""
+#mot = ter_to_ascii(ter)
 
 tr_ter = {'red': '0', 'green': '1', 'blue': '2'}
 
-colors0 = np.array(colors0)
+def checksum_checker(colors0, colors1):
+    assert(len(colors1) == len(colors0))
+    bin_ret = ""
 
-colors0 = colors0.flatten()
+    for i in range(len(colors1)):
+        c0 = ""
+        c1 = ""
 
-for i in range(len(colors0)):
-    ter = ter + tr_ter[colors0[i]]
+        for j in range(len(colors1[i])):
+            c0 = c0 + tr_ter[colors0[i][j]]
+            c1 = c1 + tr_ter[colors1[i][j]]
 
-#ter = ter[:-8]
+        bin_0 = ter_to_bin(c0[:-1])
+        bin_1 = ter_to_bin(c1[:-1])
+        bin_final = ""
 
-ter = ter.rstrip('2')
+        test_0_0 = (int(bin_0[0])+int(bin_0[1])+int(bin_0[2]))%2
+        test_1_0 = (int(bin_0[3])+int(bin_0[4])+int(bin_0[5]))%2
+        test_2_0 = (int(bin_0[6])+int(bin_0[7])+int(bin_0[8]))%2
 
-#print(ter)
+        checksum_0_0 = bin_0[9]
+        checksum_1_0 = bin_0[10]
+        checksum_2_0 = bin_0[11]
 
-if(len(ter)%2 == 1):
-    ter = ter + '2'
+        test_0_1 = (int(bin_1[0])+int(bin_1[1])+int(bin_1[2]))%2
+        test_1_1 = (int(bin_1[3])+int(bin_1[4])+int(bin_1[5]))%2
+        test_2_1 = (int(bin_1[6])+int(bin_1[7])+int(bin_1[8]))%2
 
-print(ter)
+        checksum_0_1 = bin_1[9]
+        checksum_1_1 = bin_1[10]
+        checksum_2_1 = bin_1[11]
 
 
-mot = ter_to_ascii(ter)
+        if(test_0_0 == checksum_0_0):
+            bin_final = bin_final + bin_0[0:3]
+        else:
+            bin_final = bin_final + bin_1[0:3]
+
+        if(test_1_0 == checksum_1_0):
+            bin_final = bin_final + bin_0[3:6]
+        else:
+            bin_final = bin_final + bin_1[3:6]
+        if(test_2_0 == checksum_2_0):
+            bin_final = bin_final + bin_0[6:8]
+        else:
+            bin_final = bin_final + bin_1[6:8]
+
+        bin_ret = bin_ret + bin_final
+
+
+    return bin_to_ascii(bin_ret)
+
+
+#colors0 = colors0[:-1]
+#colors1 = colors1[:-1]
+#colors0 = [['green', 'red', 'red', 'red', 'red', 'blue', 'red', 'green', 'red'], ['green', 'red', 'red', 'red', 'green', 'green', 'red', 'green', 'green']]
+#colors1 = [['green', 'red', 'red', 'red', 'red', 'blue', 'red', 'green', 'red'], ['green', 'red', 'red', 'red', 'green', 'green', 'red', 'green', 'green']]
+mot = checksum_checker(colors0,colors1)
 
 print('Mot transmis: ')
 print(mot)
 print("--- %s seconds ---" % (time.time() - start_time))
-
-# In[23]:
-
-
-
-
-# In[ ]:
-
-
-
-# In[ ]:
