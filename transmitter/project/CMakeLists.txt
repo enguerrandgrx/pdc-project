@@ -1,14 +1,24 @@
-# the ${EXERCISENAME} name is nothing else than the directory
-get_filename_component(EXERCISENAME ${CMAKE_CURRENT_LIST_DIR} NAME)
+get_filename_component(DIREC ${CMAKE_CURRENT_LIST_DIR} NAME)
 file(GLOB_RECURSE SOURCES "*.cpp")
 file(GLOB_RECURSE HEADERS "*.h")
 
-# list all the files you want to copy everytime
-# you build (ie, you want the shaders there)
+macro(deploy)
+    set(SHADERS "${ARGN}")
+    get_filename_component(DIREC ${CMAKE_CURRENT_LIST_DIR} NAME)
+    set(TN copy_shaders_${DIREC})
+    add_custom_target(${TN} ALL)
+    foreach(SHADER ${SHADERS})
+        add_custom_command(
+            TARGET ${TN}
+            COMMAND ${CMAKE_COMMAND} -E copy ${SHADER} ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Copying ${SHADER} to build folder")
+    endforeach()
+endmacro()
+
 file(GLOB SHADERS
   pdc_vshader.glsl
   pdc_fshader.glsl)
-deploy_shaders_to_build_dir(${SHADERS})
+deploy(${SHADERS})
 
-add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})
-target_link_libraries(${EXERCISENAME} ${COMMON_LIBS})
+add_executable(${DIREC} ${SOURCES} ${HEADERS} ${SHADERS})
+target_link_libraries(${DIREC} ${COMMON_LIBS})

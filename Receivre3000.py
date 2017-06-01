@@ -271,8 +271,8 @@ def color_detection (bord, path):
     #cv2.imwrite('img2_CV2_90.jpg', im2)
 
 
-    colors1 = cutting(im1, 5, 4)
-    colors2 = cutting(im2, 5, 4)
+    colors1 = cutting(im1, 6, 4)
+    colors2 = cutting(im2, 6, 4)
     # if(colors1 == colors2):
     #     return colors1, colors2
     # else:
@@ -522,7 +522,7 @@ while(True):
 
 
 
-tr_oct = {'black' = '000', 'red': '001', 'green': '010', 'blue': '011', 'blue_cian': '100', 'magenta': '101', 'yellow': '110', 'white': '111'}
+color_to_bin = {'black' = '000', 'red': '001', 'green': '010', 'blue': '011', 'blue_cian': '100', 'magenta': '101', 'yellow': '110', 'white': '111'}
 
 def checksum_checker(colors0, colors1):
     assert(len(colors1) == len(colors0))
@@ -530,65 +530,21 @@ def checksum_checker(colors0, colors1):
 
     for i in range(len(colors1)):
         c0 = ""
-        c1 = ""
         
         sub0 = ""
-        sub1 = ""
         
-        for k in range(7):
-            sub0 = sub0 + colors0[i][k*3:(k*3)+3]
+        for k in range(colors0[i]):
+            sub0 = sub0 + color_to_bin[colors0[i][k]]
+        sub0 = sub0[:-9]
+        
+        for i in range(sub0/8):
+            c0 = chr(int(sub0[i*8:i*8+8], base=2)
 
 
-
-        for j in range(len(colors1[i])):
-            c0 = c0 + tr_ter[colors0[i][j]]
-            c1 = c1 + tr_ter[colors1[i][j]]
+        bin_ret = bin_ret + c0
 
 
-
-
-
-
-
-        bin_0 = ter_to_bin(c0[:-1])
-        bin_1 = ter_to_bin(c1[:-1])
-        bin_final = ""
-
-        test_0_0 = (int(bin_0[0])+int(bin_0[1])+int(bin_0[2]))%2
-        test_1_0 = (int(bin_0[3])+int(bin_0[4])+int(bin_0[5]))%2
-        test_2_0 = (int(bin_0[6])+int(bin_0[7])+int(bin_0[8]))%2
-
-        checksum_0_0 = bin_0[9]
-        checksum_1_0 = bin_0[10]
-        checksum_2_0 = bin_0[11]
-
-        test_0_1 = (int(bin_1[0])+int(bin_1[1])+int(bin_1[2]))%2
-        test_1_1 = (int(bin_1[3])+int(bin_1[4])+int(bin_1[5]))%2
-        test_2_1 = (int(bin_1[6])+int(bin_1[7])+int(bin_1[8]))%2
-
-        checksum_0_1 = bin_1[9]
-        checksum_1_1 = bin_1[10]
-        checksum_2_1 = bin_1[11]
-
-
-        if(test_0_0 == checksum_0_0):
-            bin_final = bin_final + bin_0[0:3]
-        else:
-            bin_final = bin_final + bin_1[0:3]
-
-        if(test_1_0 == checksum_1_0):
-            bin_final = bin_final + bin_0[3:6]
-        else:
-            bin_final = bin_final + bin_1[3:6]
-        if(test_2_0 == checksum_2_0):
-            bin_final = bin_final + bin_0[6:8]
-        else:
-            bin_final = bin_final + bin_1[6:8]
-
-        bin_ret = bin_ret + bin_final
-
-
-    return bin_to_ascii(bin_ret)
+    return bin_ret
 
 
 #colors0 = colors0[:-1]

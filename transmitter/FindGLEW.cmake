@@ -1,0 +1,18 @@
+FIND_PATH( GLEW_INCLUDE_DIRS GL/glew.h
+    $ENV{GLEWDIR}/include
+    /usr/local/include
+    /usr/include)
+
+SET(GLEWLIBNAME GLEW)
+
+FIND_LIBRARY( GLEW_LIBRARIES 
+    NAMES ${GLEWLIBNAME} PATHS 
+    $ENV{GLEWDIR}/lib
+    /usr/local/lib
+    /usr/lib)
+
+SET(GLEW_FOUND "NO")
+IF(GLEW_LIBRARIES AND GLEW_INCLUDE_DIRS)
+    SET(GLEW_FOUND "YES")
+	message(STATUS "Found GLEW: ${GLEW_LIBRARIES}")
+ENDIF()

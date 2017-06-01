@@ -1,11 +1,14 @@
-// glew must be before glfw
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// contains helper functions such as shader compiler
-#include "icg_helper.h"
+#include <fstream>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <algorithm>
 
-#include <glm/gtc/type_ptr.hpp>
+
 
 #include <iostream>
 #include <bitset>
@@ -16,14 +19,14 @@
 
 
 
-//#include <vector>;
 #include <string>
 using namespace std;
 
-//vector<char>;
 
-// vertex position of the triangle
-const GLfloat triangle_vertex_positions[] = {-1.0f, -1.0f, 0.0f, 
+
+
+// pos triangle
+const GLfloat tri_v_pos[] = {-1.0f, -1.0f, 0.0f, 
                                             1.0f, -1.0f, 0.0f, 
                                             -1.0f,  1.0f, 0.0f, 
                                             1.0f, 1.0f, 0.0f};
@@ -46,7 +49,7 @@ GLuint loc_c6;
 GLuint loc_c7;
 GLuint loc_c8;
 
-string input = "jmhdkjhaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+string input = "";
 string st;
 int counter;
 
@@ -67,12 +70,117 @@ string conv_ascii_to_RGB2(string s);
 
 
 void Init() {
-    // sets background color
-    glClearColor(0.937, 0.937, 0.937 /*gray*/, 1.0 /*solid*/);
-    
-    // compile the shaders
-    program_id = icg_helper::LoadShaders("pdc_vshader.glsl",
-                                                "pdc_fshader.glsl");
+
+    int status;
+
+    string vs_code, fs_code;
+    {
+        ifstream vs_stream("pdc_vshader.glsl", ios::in);
+        if(vs_stream.is_open()) {
+            vs_code = string(istreambuf_iterator<char>(vs_stream),
+                                        istreambuf_iterator<char>());
+            vs_stream.close();
+        } else {
+            printf("Could not open pdc_vshader.glsl");
+            status = 0;
+        }
+
+        ifstream fs_stream("pdc_fshader.glsl", ios::in);
+        if(fs_stream.is_open()) {
+            fs_code = string(istreambuf_iterator<char>(fs_stream),
+                                          istreambuf_iterator<char>());
+            fs_stream.close();
+        } else {
+            printf("Could not open pdc_fshader.glsl");
+            status = 0;
+        }
+
+    }
+
+    char const *vshader = vs_code.c_str();
+    char const *fshader = fs_code.c_str();
+
+    GLint ter = GL_FALSE;
+    int len;
+
+    //  Vertex Shader
+    GLuint vs_id = glCreateShader(GL_VERTEX_SHADER);
+
+    fprintf(stdout, "Compiling Vertex shader: ");
+    char const * v_source_pointer = vshader;
+    glShaderSource(vs_id, 1, &v_source_pointer , NULL);
+    glCompileShader(vs_id);
+
+    // check
+    glGetShaderiv(vs_id, GL_COMPILE_STATUS, &ter);
+    glGetShaderiv(vs_id, GL_INFO_LOG_LENGTH, &len);
+    if(!ter) {
+        vector<char> vertex_shader_error_message(len);
+        glGetShaderInfoLog(vs_id, len, NULL,
+                           &vertex_shader_error_message[0]);
+        fprintf(stdout, "Failed:\n%s\n", &vertex_shader_error_message[0]);
+        status = 0;
+    }
+    else{
+        fprintf(stdout, "Success\n");
+    }
+
+
+
+    // Fragment Shader
+    GLuint fs_id = glCreateShader(GL_FRAGMENT_SHADER);
+
+    fprintf(stdout, "Compiling Fragment shader: ");
+    char const * f_source_pointer = fshader;
+    glShaderSource(fs_id, 1, &f_source_pointer , NULL);
+    glCompileShader(fs_id);
+
+    // check
+    glGetShaderiv(fs_id, GL_COMPILE_STATUS, &ter);
+    glGetShaderiv(fs_id, GL_INFO_LOG_LENGTH, &len);
+    if(!ter) {
+        vector<char> fs_err_mess(len);
+        glGetShaderInfoLog(fs_id, len, NULL,
+                           &fs_err_mess[0]);
+        fprintf(stdout, "Failed:\n%s\n", &fs_err_mess[0]);
+        status = 0;
+    }
+    else
+        fprintf(stdout, "Success\n");
+
+
+    fprintf(stdout, "Linking shader program: ");
+    GLuint program_id = glCreateProgram();
+    glAttachShader(program_id, vs_id);
+    glAttachShader(program_id, fs_id);
+    glLinkProgram(program_id);
+
+
+    glGetProgramiv(program_id, GL_LINK_STATUS, &ter);
+    glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &len);
+    vector<char> err_mess(max(len, int(1)));
+    glGetProgramInfoLog(program_id, len, NULL, &err_mess[0]);
+    if(!ter) {
+        fprintf(stdout, "Failed:\n%s\n", &err_mess[0]);
+        status = 0;
+    }
+    else {
+        fprintf(stdout, "Success\n");
+    }
+
+    glDeleteShader(vs_id);
+    glDeleteShader(fs_id);
+
+    fflush(stdout);
+
+    status = program_id;
+
+    if(status == 0)
+        printf("Failed linking:\n  vshader: %s\n  fshader: %s\n  gshader: %s\n",
+               "pdc_vshader.glsl", "pdc_fshader.glsl", NULL);
+
+
+
     if(!program_id) {
         exit(EXIT_FAILURE);
     }
@@ -84,29 +192,24 @@ void Init() {
 
     glUniform1i(loc_starting, 1);
 
-    
-    // setup vertex array;
-    // vertex arrays wrap buffers & attributes together
-    // creating it is mandatory in newer OpenGL versions (>= 3.0)
-    GLuint vertex_array_id;
-    glGenVertexArrays(ONE, &vertex_array_id);
-    glBindVertexArray(vertex_array_id);
-    
-    // generate memory for vertex buffer
-    GLuint vertex_buffer;
-    glGenBuffers(ONE, &vertex_buffer);
-    // the subsequent commands will affect the specified buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    // pass the vertex positions to OpenGL
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertex_positions),
-                 triangle_vertex_positions, GL_STATIC_DRAW);
 
-    // creates Vertex Attribute to store Vertex Positions
-    GLuint vertex_point_id = glGetAttribLocation(program_id, "vpoint");
-    glEnableVertexAttribArray(vertex_point_id);
-    //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glVertexAttribPointer(vertex_point_id, 3, GL_FLOAT, DONT_NORMALIZE,
-                          ZERO_STRIDE, ZERO_BUFFER_OFFSET);
+    
+    
+    // Setup vertex arrays
+    GLuint v_array_id;
+    glGenVertexArrays(1, &v_array_id);
+    glBindVertexArray(v_array_id);
+    
+    GLuint v_buffer;
+    glGenBuffers(1, &v_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, v_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tri_v_pos),
+                 tri_v_pos, GL_STATIC_DRAW);
+
+    GLuint v_point_id = glGetAttribLocation(program_id, "vpoint");
+    glEnableVertexAttribArray(v_point_id);
+    glVertexAttribPointer(v_point_id, 3, GL_FLOAT, false,
+                          0, 0);
 
     loc_c0 = glGetUniformLocation(program_id, "c0");
     loc_c1 = glGetUniformLocation(program_id, "c1");
@@ -206,12 +309,6 @@ void preDisplay() {
 
         } else {
 
-        
-/*
-            Display(tab);
-
-            glfwSwapBuffers(window);
-            glfwPollEvents();*/
 
                 Display(tab, par);
                 glfwSwapBuffers(window);
@@ -219,7 +316,6 @@ void preDisplay() {
 
 
         }
-        //this_thread::sleep_for(chrono::seconds(1));
 
 
     }
@@ -392,27 +488,21 @@ string bin_to_ter(string s) {
 
 
 int main(int argc, char *argv[]) {
-
-    // GLFW Initialization
+    unsigned char i = 'ï';
+    
+    cout << i << endl;
+    
     if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return EXIT_FAILURE;
     }
 
-    glfwSetErrorCallback(ErrorCallback);
     
-    // hint GLFW that we would like an OpenGL 3 context (at least)
-    // http://www.glfw.org/faq.html#how-do-i-create-an-opengl-30-context
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    // attempt to open the window: fails if required version unavailable
-    // note some Intel GPUs do not support OpenGL 3.2
-    // note update the driver of your graphic card
-    
-    //GLFWwindow* window = glfwCreateWindow(512, 512, "Project PDC", NULL, NULL);
     window = glfwCreateWindow(512, 512, "Project PDC", NULL, NULL);
 
     if(!window) {
@@ -420,15 +510,14 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // makes the OpenGL context of window current on the calling thread
     glfwMakeContextCurrent(window);
-
-    // set the callback for keyboard keys
+    
     glfwSetKeyCallback(window, KeyCallback);
 
-    // GLEW Initialization (must have a context)
-    // https://www.opengl.org/wiki/OpenGL_Loading_Library
-    glewExperimental = GL_TRUE; // fixes glew error (see above link)
+
+
+
+    glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_NO_ERROR) {
         fprintf(stderr, "Failed to initialize GLEW\n");
         return EXIT_FAILURE;
@@ -436,19 +525,12 @@ int main(int argc, char *argv[]) {
 
     cout << "OpenGL" << glGetString(GL_VERSION) << endl;
     
-    // initialize our OpenGL program
     Init();
     
     preDisplay();
 
-    // render loop
-    /*while(!glfwWindowShouldClose(window)) {
-        preDisplay();
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }*/
 
-    // close OpenGL window and terminate GLFW
+
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
