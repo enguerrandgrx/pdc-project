@@ -41,26 +41,16 @@ def find_screen(cnts, image):
         #print("perimetre ", peri)
         approx_tmp = cv2.approxPolyDP(c, 0.02 * peri, True)
         approx_tmp = np.squeeze(approx_tmp)
-        #print(approx)
-        #cv2.drawContours(image, [approx_tmp], -1, (0, 255, 0), 4)
-        #print("approx_tmp ",approx_tmp)
-        #print("len approx_tmp",len(approx_tmp))
         print("perimetre: ", peri)
         print(approx_tmp)
-        #cv2.drawContours(copieImg, [approx_tmp], -1, (col, 255-col, col), 4)
 
-        if (peri > 100 and peri < 400):# and len(approx_tmp) == 4):
+        if (peri > 100 and peri < 400):
             approx.append(approx_tmp)
             print(approx)
 
             cv2.drawContours(copieImg, [approx_tmp], -1, (col, 255-col, col), 4)
             cv2.imwrite('img_CV2_90.jpg', copieImg)
 
-            #col = col + 50
-
-    #plt.show()
-    # print("approx ",approx)
-    # print("len approx ",len(approx))
     return approx
 
 
@@ -69,9 +59,7 @@ def find_screen(cnts, image):
 def bords(approx):
 
     print(approx)
-    # if(len(approx) == 2):
-    #     approx = np.concatenate((approx[0], approx[1]), axis = 0)
-    # approx = np.squeeze(approx)
+   
     bord = []
     min_x = sys.maxsize
     max_x = 0
@@ -80,7 +68,6 @@ def bords(approx):
     config = 0
     if(len(approx) == 1):
         approx = approx[0]
-    #print("approx 0 ",approx)
 
     for appro in approx:
         if appro[0] > max_x:
@@ -103,22 +90,6 @@ def bords(approx):
         config = 1
         bord = [min_x, max_x, min_y, max_y]
 
-
-    # if(len(approx) == 4):
-    #     if(max_x - min_x > max_y - min_y):
-    #         config = 2
-    #     else:
-    #         config = 1
-    # else:
-    #     approx_x = approx[:,0]
-    #     approx_y = approx[:,1]
-    #     fit = np.polyfit(approx_x,approx_y,1)
-    #     if(fit[0] < 0):
-    #         config = 3
-    #     else:
-    #         config = 4
-    # return bord,config
-
     return bord, config
 
 
@@ -133,7 +104,6 @@ def detection(path, color = 0): # --------
     #on split l'image en fonction des couleurs
     b,g,r = cv2.split(img)
 
-    #print("--- %s seconds ---" % (time.time() - start_time))
 
     # on parcours l'image et on mets r a 0 si b ou r superieur a un seuil (ici 50)
     for x in range(0, r.shape[0]):
@@ -160,9 +130,7 @@ def detection(path, color = 0): # --------
                     r[x][y] = 0
 
 
-    #print("--- %s seconds ---" % (time.time() - start_time))
 
-    #cv2.imwrite('img_CV2_90.jpg', r)
 
     # on applique un filtre binaire
     if (color == 0 or color == 3):
@@ -172,7 +140,6 @@ def detection(path, color = 0): # --------
     elif color == 2:
         ret,seg = cv2.threshold(b,150,255.0,cv2.THRESH_BINARY)
 
-    # cv2.imwrite('img_CV2_90.jpg', seg)
     # detecte
     edged = cv2.Canny(seg, 100, 100)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
@@ -181,7 +148,6 @@ def detection(path, color = 0): # --------
 
 
 
-    #print(cnts)
     if(cnts == []):
         return [],[]
     approx = find_screen(cnts, img)
@@ -195,7 +161,6 @@ def detection(path, color = 0): # --------
     print(approx)
 
     print("les 4 bords de l'ecrans sont : ", bord)
-    #print("la configuration est la n°", config)
     print("--- %s seconds ---" % (time.time() - start_time))
 
     return bord,sucess
@@ -217,76 +182,23 @@ def color_detection (bord, path):
 
     img = resize(path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # bords = [min_x, max_x, min_y, max_y]
-    #cv2.imwrite('img1_CV2_90_8.jpg', img)
-
+   
     im1 = []
     im2 = []
     colors1 = []
     colors2 = []
-    # ========================= A Verifier ======================
-    #(min_y, max_y, min_x, max_x) = bord
-    #(min_x, max_x, min_y, max_y) = bord
-    #mid_x = int( min_x + (max_x - min_x)/2)
-    #mid_y = int( min_y + (max_y - min_y)/2)
-    #print("mid_x",mid_x)
-    #print("mid_y",mid_y)
-
-    #print("min x : ", min_x, " max_x : ", max_x, " min y: ", min_y, " max y: ", max_y)
-    #if(config == 2):
-    #    #Image dans la hauteur - ie
-    #    im1 = img[min_x: max_x, min_y: mid_y ]
-    #    im2 = img[min_x: max_x , mid_y:max_y ]
-    #elif(config == 1):
-    #    #Image dans la Longeur - ie
-    #    im1 = img[min_x : mid_x , min_y:max_y]
-    #    im2 = img[mid_x : max_x, min_y:max_y]
-    #elif(config == 3):
-    #    #Image dans  - ie
-    #    im1 = img[min_x : mid_x, mid_y : max_y]
-    #    im2 = img[mid_x : max_x, min_y : mid_y]
-    #elif(config == 4):
-        #Image dans  - ie
-    #    im1 = img[min_x : mid_x , min_y : mid_y]
-    #    im2 = img[mid_x : max_x, mid_y : max_y]
 
     (bord1, bord2) = bord
-    #print("bord 1 : ", bord1)
-    #print("bord 2 : ", bord2)
-    #print("diff bord 1",bord1[1]-bord1[0],bord1[3]-bord1[2])
-    #print("diff bord 2", bord2[1]-bord2[0],bord2[3]-bord2[2])
-
-
-
+ 
     im1 = img[bord1[2]:bord1[3],:]
     im2 = img[bord2[2]:bord2[3],:]
 
     im1 = im1[:,bord1[0]:bord1[1]]
     im2 = im2[:,bord2[0]:bord2[1]]
 
-    #print(im1.shape[0], im1.shape[1])
-    #print(im2.shape[0], im2.shape[1])
-
-    #cv2.imwrite('img1_CV2_90.jpg', im1)
-    #cv2.imwrite('img2_CV2_90.jpg', im2)
-
-
     colors1 = cutting(im1, 6, 4)
     colors2 = cutting(im2, 6, 4)
-    # if(colors1 == colors2):
-    #     return colors1, colors2
-    # else:
-    #     print("Error 1 : ", colors1)
-    #     print("Error 2 : ", colors2)
-    #     #plt.imshow(im1)
-    #     #plt.imshow(im2)
-    #     #plt.show()
-    #     #time.sleep(5)
-    #     #plt.close()
-    #
-    #     #plt.imshow(im2)
-    #     #plt.show()
-    #     return colors1, colors2
+
 
     return [colors1, colors2]
 
@@ -298,15 +210,10 @@ def cutting(img, indexX, indexY):
     colors = []
     x = img.shape[0]
     y = img.shape[1]
-    #print("x cutting",x)
-    #print("y cutting",y)
     for i in range(0,indexX):
-        #print("Index of i:", i)
         for j in range(0, indexY):
-            #print("Index of j:", j)
             imTmp = img[int((i)*x/indexX):int((i+1)*x/indexX), int((j)*y/indexY):int((j+1)*y/indexY)]
-            #plt.imshow(imTmp)
-            #plt.show()
+
             color = find_color(imTmp)
             colors.append(color)
     return colors
@@ -350,12 +257,8 @@ def witch_color(point):
 
 # this function take an square and output its color
 def find_color(img):
-    #plt.imshow(img)
-    #plt.show()
     x = img.shape[0]
     y = img.shape[1]
-    #print("x",x)
-    #print("y",y)
     mid = img[int(x/2), int(y/2)]
     return witch_color(mid)
 
@@ -373,8 +276,6 @@ def oct_to_ascii(s):
 
 start_time = time.time()
 #
-# # print(color_detection(bord3, config3, 'color_screen3.png'))
-# print("--- %s seconds ---" % (time.time() - start_time))
 #
 
 # Part 3: From Video
@@ -407,8 +308,6 @@ if not(cap.isOpened()):
 
 redD = 0
 blueD = 0
-#greenD = 1
-#pinkD = 1
 while(True):
     ret, frame = cap.read()
     k= cv2.waitKey(1)
@@ -424,23 +323,12 @@ while(True):
 
             if screen_detected:
                 redD = screen_detected
-        #elif i == 1 and greenD == 0:
-        #    print("GREEN")
-        #    bord, screen_detected = detection(frame, i)
-        #    print(bord)
 
-        #    if screen_detected:
-        #        greenD = 1
         elif i == 2 and blueD == 0:
             print("BLUE")
             bord_blue, screen_detected = detection(frame, i)
             if screen_detected:
                 blueD = screen_detected
-        #elif i == 3 and pinkD == 0:
-        #   print("PINK")
-        #  bord, screen_detected = detection(frame, i)
-        #  if screen_detected:
-        #      pinkD = 1
 
         screen_detected = redD + blueD
 
@@ -458,7 +346,6 @@ while(True):
     print(count)
 
 print("total nb of round : ",count)
-#print("detected colors : ",colors)
 print("--- %s seconds ---" % (time.time() - start_time))
 
 error_count = 0
@@ -471,7 +358,6 @@ while(True):
     time2 = time.time()
     ret, frame = cap.read()
     color = color_detection(bord, frame)
-    #print("color: ",color)
 
     if ((color[0] == color_red or color[0] == color_blue or color[1] == color_red or color[1] == color_blue) and not begin):
         pass
@@ -499,13 +385,9 @@ while(True):
                 error_count = 0
                 counter = 0
 
-                #if(error > 10):
-                #image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             else:
                 time.sleep(0.01)
 
-            #plt.imshow(frame)
-            #plt.show()
         else:
             if counter == 0 or counter == 1:
                 counter = counter + 1
@@ -518,7 +400,6 @@ while(True):
                 color_prev0 = color[0]
                 color_prev1 = color[1]
                 counter = 0
-    #print(time.time() - time2)
 
 
 
@@ -547,10 +428,7 @@ def checksum_checker(colors0, colors1):
     return bin_ret
 
 
-#colors0 = colors0[:-1]
-#colors1 = colors1[:-1]
-#colors0 = [['green', 'red', 'red', 'red', 'red', 'blue', 'red', 'green', 'red'], ['green', 'red', 'red', 'red', 'green', 'green', 'red', 'green', 'green']]
-#colors1 = [['green', 'red', 'red', 'red', 'red', 'blue', 'red', 'green', 'red'], ['green', 'red', 'red', 'red', 'green', 'green', 'red', 'green', 'green']]
+
 mot = checksum_checker(colors0,colors1)
 
 print('Mot transmis: ')
